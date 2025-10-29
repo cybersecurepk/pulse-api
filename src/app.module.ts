@@ -1,10 +1,48 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import appConfig from './config/app.config';
+import databaseConfig from './database/config/database.config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmConfigService } from './database/typeorm-config.service';
+import { DataSource } from 'typeorm';
+import { HomeModule } from './modules/home/home.module';
+import { TestModule } from './modules/test/test.module';
+import { QuestionModule } from './modules/question/question.module';
+import { OptionModule } from './modules/option/option.module';
+import { UserModule } from './modules/user/user.module';
+import { BatchModule } from './modules/batch/batch.module';
+import { InstructorModule } from './modules/instructor/instructor.module';
+import { BatchTestModule } from './modules/batch-test/batch-test.module';
+import { BatchUserModule } from './modules/batch-user/batch-user.module';
+import { BatchInstructorModule } from './modules/batch-instructor/batch-instructor.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig, databaseConfig],
+      envFilePath: ['.env'],
+    }),
+    TypeOrmModule.forRootAsync({
+      useClass: TypeOrmConfigService,
+      dataSourceFactory: async (options) => {
+        if (!options) {
+          throw new Error('DataSource options are undefined');
+        }
+        const dataSource = await new DataSource(options).initialize();
+        return dataSource;
+      },
+    }),
+    HomeModule,
+    TestModule,
+    QuestionModule,
+    OptionModule,
+    UserModule,
+    BatchModule,
+    InstructorModule,
+    BatchTestModule,
+    BatchUserModule,
+    BatchInstructorModule,
+  ],
 })
 export class AppModule {}
