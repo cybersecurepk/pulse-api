@@ -1,5 +1,6 @@
 import { Question } from 'src/modules/question/entities/question.entity';
 import { BatchTest } from 'src/modules/batch-test/entities/batch-test.entity';
+import { TestScreenshot } from './test-screenshot.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -56,4 +57,7 @@ export class Test {
 
   @OneToMany(() => BatchTest, (batchTest) => batchTest.test)
   batchTests: BatchTest[];
+  
+  @OneToMany(() => TestScreenshot, (screenshot) => screenshot.test)
+  screenshots: TestScreenshot[];
 }

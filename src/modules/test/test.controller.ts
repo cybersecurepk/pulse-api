@@ -13,6 +13,8 @@ import { TestService } from './test.service';
 import { CreateTestDto } from './dto/create-test-dto';
 import { Test } from './entities/test.entity';
 import { UpdateTestDto } from './dto/update-test-dto';
+import { CreateScreenshotDto } from './dto/create-screenshot-dto';
+import { TestScreenshot } from './entities/test-screenshot.entity';
 import { UserRole } from 'src/enums/user-role.enum';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
@@ -54,5 +56,24 @@ export class TestController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string): Promise<void> {
     return this.testService.remove(id);
+  }
+
+  @Post(':id/screenshots')
+  @ApiOperation({ summary: 'Add a screenshot to a test' })
+  @HttpCode(HttpStatus.CREATED)
+  addScreenshot(
+    @Param('id') testId: string,
+    @Body() createScreenshotDto: CreateScreenshotDto,
+  ): Promise<TestScreenshot> {
+    return this.testService.addScreenshot({
+      ...createScreenshotDto,
+      testId,
+    });
+  }
+
+  @Get(':id/screenshots')
+  @ApiOperation({ summary: 'Get all screenshots for a test' })
+  getScreenshots(@Param('id') testId: string): Promise<TestScreenshot[]> {
+    return this.testService.getScreenshotsByTestId(testId);
   }
 }

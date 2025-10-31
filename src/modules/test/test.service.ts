@@ -7,14 +7,19 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Test } from '../test/entities/test.entity';
+import { TestScreenshot } from '../test/entities/test-screenshot.entity';
 import { CreateTestDto } from '../test/dto/create-test-dto';
 import { UpdateTestDto } from '../test/dto/update-test-dto';
+import { CreateScreenshotDto } from './dto/create-screenshot-dto';
+import { ScreenshotService } from './screenshot.service';
 
 @Injectable()
 export class TestService {
   constructor(
     @InjectRepository(Test)
     private testRepository: Repository<Test>,
+    @InjectRepository(TestScreenshot)
+    private screenshotRepository: Repository<TestScreenshot>,
   ) {}
 
   async findAll(): Promise<Test[]> {
@@ -31,7 +36,7 @@ export class TestService {
   async findOne(id: string): Promise<Test> {
     const test = await this.testRepository.findOne({
       where: { id },
-      relations: ['questions', 'questions.options'],
+      relations: ['questions', 'questions.options', 'screenshots'],
     });
 
     if (!test) {
@@ -88,5 +93,31 @@ export class TestService {
       throw new ForbiddenException('Test window has ended');
     }
     return test;
+  }
+
+  async addScreenshot(createScreenshotDto: CreateScreenshotDto): Promise<TestScreenshot> {
+    const test = await this.testRepository.findOne({
+      where: { id: createScreenshotDto.testId },
+    });
+
+    if (!test) {
+      throw new NotFoundException(`Test with ID ${createScreenshotDto.testId} not found`);
+    }
+
+    const screenshot = this.screenshotRepository.create({
+      ...createScreenshotDto,
+      test: test,
+    });
+
+    return await this.screenshotRepository.save(screenshot);
+  }
+
+  async getScreenshotsByTestId(testId: string): Promise<TestScreenshot[]> {
+    return await this.screenshotRepository.find({
+      where: { test: { id: testId } },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 }
