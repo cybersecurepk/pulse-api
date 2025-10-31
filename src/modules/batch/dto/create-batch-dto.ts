@@ -9,7 +9,7 @@ import {
   IsEnum,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { BatchStatus } from '../entities/batch.entity';
+import { BatchStatus, SessionType } from '../entities/batch.entity';
 
 export class CreateBatchDto {
   @ApiProperty({ example: 'Winter 2024 Bootcamp' })
@@ -17,10 +17,10 @@ export class CreateBatchDto {
   @Length(1, 255)
   name: string;
 
-  @ApiProperty({ example: 'BATCH-2024-01' })
+  @ApiPropertyOptional({ example: 'BATCH-2024-01' }) // Made optional
   @IsString()
-  @Length(1, 255)
-  batchCode: string;
+  @IsOptional()
+  batchCode?: string; // Made optional
 
   @ApiPropertyOptional({
     example: 'Comprehensive training program for web development',
@@ -57,5 +57,9 @@ export class CreateBatchDto {
   @IsEnum(BatchStatus)
   @IsOptional()
   status?: BatchStatus;
-}
 
+  @ApiPropertyOptional({ example: SessionType.REMOTE })
+  @IsEnum(SessionType)
+  @IsOptional()
+  sessionType?: SessionType;
+}

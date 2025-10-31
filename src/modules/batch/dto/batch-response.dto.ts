@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SessionType } from '../entities/batch.entity';
 
 export class BatchResponseDto {
   @ApiProperty()
@@ -6,6 +7,9 @@ export class BatchResponseDto {
 
   @ApiProperty()
   name: string;
+
+  @ApiPropertyOptional()
+  batchCode?: string;
 
   @ApiPropertyOptional()
   description?: string;
@@ -27,5 +31,7 @@ export class BatchResponseDto {
 
   @ApiProperty()
   updatedAt: Date;
-}
 
+  @ApiPropertyOptional({ example: SessionType.REMOTE })
+  sessionType?: SessionType;
+}

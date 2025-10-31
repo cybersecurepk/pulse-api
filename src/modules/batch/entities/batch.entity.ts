@@ -18,6 +18,11 @@ export enum BatchStatus {
   COMPLETED = 'completed',
 }
 
+export enum SessionType {
+  REMOTE = 'remote',
+  ONSITE = 'onsite',
+}
+
 @Entity('batches')
 export class Batch {
   @PrimaryGeneratedColumn('uuid')
@@ -26,7 +31,7 @@ export class Batch {
   @Column({ length: 255 })
   name: string;
 
-  @Column({ length: 255, unique: true })
+  @Column({ length: 255, nullable: true })
   batchCode: string;
 
   @Column({ type: 'text', nullable: true })
@@ -49,6 +54,9 @@ export class Batch {
 
   @Column({ type: 'enum', enum: BatchStatus, default: BatchStatus.PENDING })
   status: BatchStatus;
+
+  @Column({ type: 'enum', enum: SessionType, default: SessionType.REMOTE })
+  sessionType: SessionType;
 
   @CreateDateColumn({
     type: 'timestamp',
