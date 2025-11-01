@@ -65,10 +65,7 @@ export class TestController {
     @Param('id') testId: string,
     @Body() createScreenshotDto: CreateScreenshotDto,
   ): Promise<TestScreenshot> {
-    return this.testService.addScreenshot({
-      ...createScreenshotDto,
-      testId,
-    });
+    return this.testService.addScreenshot(testId, createScreenshotDto);
   }
 
   @Get(':id/screenshots')

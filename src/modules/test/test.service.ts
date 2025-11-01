@@ -95,18 +95,19 @@ export class TestService {
     return test;
   }
 
-  async addScreenshot(createScreenshotDto: CreateScreenshotDto): Promise<TestScreenshot> {
-    const test = await this.testRepository.findOne({
-      where: { id: createScreenshotDto.testId },
-    });
+  async addScreenshot(
+    testId: string,
+    createScreenshotDto: CreateScreenshotDto,
+  ): Promise<TestScreenshot> {
+    const test = await this.testRepository.findOne({ where: { id: testId } });
 
     if (!test) {
-      throw new NotFoundException(`Test with ID ${createScreenshotDto.testId} not found`);
+      throw new NotFoundException(`Test with ID ${testId} not found`);
     }
 
     const screenshot = this.screenshotRepository.create({
       ...createScreenshotDto,
-      test: test,
+      test,
     });
 
     return await this.screenshotRepository.save(screenshot);

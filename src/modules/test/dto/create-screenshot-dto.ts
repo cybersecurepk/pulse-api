@@ -7,7 +7,4 @@ export class CreateScreenshotDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsUUID()
-  testId: string;
 }
