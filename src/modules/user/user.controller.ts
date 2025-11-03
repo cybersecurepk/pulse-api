@@ -17,6 +17,7 @@ import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { ApplicationStatus } from './entities/user.entity';
+import { UserRole } from '../../enums/user-role.enum';
 
 @ApiTags('Users')
 @Controller('users')
@@ -74,6 +75,13 @@ export class UserController {
         );
       }
     }
+    
+    // If application status is being updated to APPROVED, change role to USER
+    const existingUser = await this.userService.findOne(id);
+    if (updateUserDto.applicationStatus === 'approved' && existingUser.applicationStatus !== 'approved') {
+      updateUserDto.role = UserRole.USER;
+    }
+    
     return this.userService.update(id, updateUserDto);
   }
 
@@ -84,4 +92,3 @@ export class UserController {
     return this.userService.remove(id);
   }
 }
-

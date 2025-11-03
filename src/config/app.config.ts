@@ -39,6 +39,10 @@ class EnvironmentVariablesValidator {
   @IsString()
   @IsOptional()
   API_PREFIX: string;
+
+  @IsString()
+  @IsOptional()
+  JWT_SECRET: string;
 }
 
 export default registerAs<AppConfig>('app', () => {
@@ -57,7 +61,7 @@ export default registerAs<AppConfig>('app', () => {
         : 3000,
     apiPrefix: process.env.API_PREFIX || 'api',
     jwtSecret: process.env.JWT_SECRET || 'default-secret-key-change-in-production',
-    jwtExpiry: process.env.JWT_EXPIRY || '10s',
+    jwtExpiry: process.env.JWT_EXPIRY || '1h',
     jwtRefreshExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
   };
 });

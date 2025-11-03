@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { BatchUser } from '../../batch-user/entities/batch-user.entity';
+import { UserRole } from '../../../enums/user-role.enum';
 
 export enum ApplicationStatus {
   PENDING = 'pending',
@@ -104,6 +105,13 @@ export class User {
     default: ApplicationStatus.PENDING,
   })
   applicationStatus: ApplicationStatus;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.APPLICANT,
+  })
+  role: UserRole;
 
   @CreateDateColumn({
     type: 'timestamp',

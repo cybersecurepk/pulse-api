@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { ApplicationStatus } from '../entities/user.entity';
+import { UserRole } from '../../../enums/user-role.enum';
 import { Type } from 'class-transformer';
 
 class ExperienceDto {
@@ -162,4 +163,14 @@ export class CreateUserDto {
   @IsEnum(ApplicationStatus)
   @IsOptional()
   applicationStatus?: ApplicationStatus;
+
+  // Role
+  @ApiPropertyOptional({
+    enum: UserRole,
+    default: UserRole.APPLICANT,
+    example: UserRole.APPLICANT,
+  })
+  @IsEnum(UserRole)
+  @IsOptional()
+  role?: UserRole;
 }

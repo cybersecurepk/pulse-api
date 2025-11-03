@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import appConfig from './config/app.config';
 import databaseConfig from './database/config/database.config';
+import googleOauthConfig from './config/google-oauth.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { DataSource } from 'typeorm';
@@ -15,12 +16,16 @@ import { InstructorModule } from './modules/instructor/instructor.module';
 import { BatchTestModule } from './modules/batch-test/batch-test.module';
 import { BatchUserModule } from './modules/batch-user/batch-user.module';
 import { BatchInstructorModule } from './modules/batch-instructor/batch-instructor.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { TokenModule } from './modules/token/token.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig],
+      load: [appConfig, databaseConfig, googleOauthConfig],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({
@@ -43,6 +48,8 @@ import { BatchInstructorModule } from './modules/batch-instructor/batch-instruct
     BatchTestModule,
     BatchUserModule,
     BatchInstructorModule,
+    AuthModule,
+    TokenModule,
   ],
 })
 export class AppModule {}

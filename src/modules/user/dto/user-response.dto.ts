@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ApplicationStatus } from '../entities/user.entity';
+import { UserRole } from '../../../enums/user-role.enum';
 import { Type } from 'class-transformer';
 
 class ExperienceResponseDto {
@@ -95,6 +96,12 @@ export class UserResponseDto {
     default: ApplicationStatus.PENDING,
   })
   applicationStatus?: ApplicationStatus;
+
+  @ApiPropertyOptional({
+    enum: UserRole,
+    default: UserRole.APPLICANT,
+  })
+  role?: UserRole;
 
   @ApiPropertyOptional()
   applicationNotes?: string;

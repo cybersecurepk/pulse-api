@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
+import { UserRole } from '../../enums/user-role.enum';
 
 @Injectable()
 export class UserService {
@@ -37,6 +38,11 @@ export class UserService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    // Set default role to APPLICANT if not provided
+    if (!createUserDto.role) {
+      createUserDto.role = UserRole.APPLICANT;
+    }
+    
     const user = this.userRepository.create(createUserDto);
     return await this.userRepository.save(user);
   }
@@ -44,6 +50,12 @@ export class UserService {
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
     Object.assign(user, updateUserDto);
+    
+    // If application status is being updated to APPROVED, change role to USER
+    if (updateUserDto.applicationStatus === 'approved') {
+      user.role = UserRole.USER;
+    }
+    
     return await this.userRepository.save(user);
   }
 
@@ -60,5 +72,10 @@ export class UserService {
       order: { createdAt: 'DESC' },
     });
   }
+  
+  async updateRole(id: string, role: UserRole): Promise<User> {
+    const user = await this.findOne(id);
+    user.role = role;
+    return await this.userRepository.save(user);
+  }
 }
-
