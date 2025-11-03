@@ -25,10 +25,15 @@ export class BatchTestController {
   @ApiOperation({ summary: 'Get all batch-test assignments' })
   @ApiQuery({ name: 'batchId', required: false, description: 'Filter by batch ID' })
   @ApiQuery({ name: 'testId', required: false, description: 'Filter by test ID' })
+  @ApiQuery({ name: 'userId', required: false, description: 'Filter by user ID' })
   async findAll(
     @Query('batchId') batchId?: string,
     @Query('testId') testId?: string,
+    @Query('userId') userId?: string,
   ): Promise<BatchTest[]> {
+    if (userId) {
+      return this.batchTestService.findByUser(userId);
+    }
     if (batchId) {
       return this.batchTestService.findByBatch(batchId);
     }
@@ -67,4 +72,3 @@ export class BatchTestController {
     return this.batchTestService.remove(id);
   }
 }
-

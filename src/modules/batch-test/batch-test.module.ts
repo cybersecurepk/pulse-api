@@ -5,12 +5,12 @@ import { BatchTestController } from './batch-test.controller';
 import { BatchTest } from './entities/batch-test.entity';
 import { Batch } from '../batch/entities/batch.entity';
 import { Test } from '../test/entities/test.entity';
+import { BatchUser } from '../batch-user/entities/batch-user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BatchTest, Batch, Test])],
+  imports: [TypeOrmModule.forFeature([BatchTest, Batch, Test, BatchUser])],
   controllers: [BatchTestController],
   providers: [BatchTestService],
   exports: [BatchTestService],
 })
 export class BatchTestModule {}
-
