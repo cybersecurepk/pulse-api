@@ -44,8 +44,11 @@ export class AuthController {
       // Generate access token for the user
       const { accessToken, refreshToken, user } = await this.authService.loginWithUser(req.user);
       
-      // Redirect to frontend Google callback page with tokens
-      const redirectUrl = `http://localhost:3021/auth/google-callback?token=${accessToken}&refreshToken=${refreshToken}`;
+      // Encode user data as base64 to pass in URL
+      const userData = Buffer.from(JSON.stringify(user)).toString('base64');
+      
+      // Redirect to frontend Google callback page with tokens and user data
+      const redirectUrl = `http://localhost:3021/auth/google-callback?token=${accessToken}&refreshToken=${refreshToken}&user=${encodeURIComponent(userData)}`;
       return res.redirect(redirectUrl);
     } catch (error) {
       return res.redirect(`http://localhost:3021/auth/sign-in?error=auth_failed`);
