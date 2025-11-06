@@ -17,6 +17,8 @@ import { CreateScreenshotDto } from './dto/create-screenshot-dto';
 import { TestScreenshot } from './entities/test-screenshot.entity';
 import { UserRole } from 'src/enums/user-role.enum';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { SubmitTestAttemptDto } from './dto/submit-test-attempt-dto';
+import { TestAttemptResultDto } from './dto/test-attempt-result-dto';
 
 @Controller('tests')
 @ApiBearerAuth('JWT-auth')
@@ -72,5 +74,28 @@ export class TestController {
   @ApiOperation({ summary: 'Get all screenshots for a test' })
   getScreenshots(@Param('id') testId: string): Promise<TestScreenshot[]> {
     return this.testService.getScreenshotsByTestId(testId);
+  }
+
+  @Get(':id/attempt')
+  @ApiOperation({ summary: 'Get test for user attempt (without correct answers)' })
+  @ApiResponse({ status: 200, description: 'Test data without correct answer flags' })
+  getTestForAttempt(@Param('id') testId: string) {
+    return this.testService.getTestForAttempt(testId);
+  }
+
+  @Post(':id/submit')
+  @ApiOperation({ summary: 'Submit test attempt and get results' })
+  @ApiResponse({ status: 200, description: 'Test attempt results with score' })
+  @HttpCode(HttpStatus.OK)
+  submitTestAttempt(
+    @Param('id') testId: string,
+    @Body() submitTestAttemptDto: SubmitTestAttemptDto,
+  ): Promise<TestAttemptResultDto> {
+    return this.testService.submitTestAttempt(
+      testId,
+      submitTestAttemptDto.userId,
+      submitTestAttemptDto.answers,
+      submitTestAttemptDto.timeSpent,
+    );
   }
 }
