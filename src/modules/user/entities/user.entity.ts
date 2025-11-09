@@ -97,7 +97,6 @@ export class User {
 
   @Column({ type: 'boolean', default: false })
   consent: boolean;
-  // --- End application fields ---
 
   @Column({
     type: 'enum',

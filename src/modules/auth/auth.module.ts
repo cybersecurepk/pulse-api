@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from '../user/user.module';
 import { TokenModule } from '../token/token.module';
+import { MailModule } from '../mail/mail.module';
+import { OtpModule } from '../otp/otp.module';
 import googleOauthConfig from '../../config/google-oauth.config';
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { AuthService } from './auth.service';
@@ -16,6 +18,8 @@ import appConfig from '../../config/app.config';
   imports: [
     UserModule,
     TokenModule,
+    MailModule,
+    OtpModule,
     ConfigModule.forFeature(googleOauthConfig),
     ConfigModule.forFeature(appConfig),
     JwtModule.registerAsync({
