@@ -15,6 +15,9 @@ import { ApiBearerAuth } from "@nestjs/swagger";
 import { GoogleAuthGuard } from "./guards/google-auth/google-auth.guard";
 import { Public } from "../../decorator/isPublic";
 import type { Request, Response } from "express";
+import { LoginDto } from "./dto/login.dto";
+import { VerifyOtpDto } from "./dto/verify-otp.dto";
+import { ResendOtpDto } from "./dto/resend-otp.dto";
 
 @ApiTags("Authentication")
 @Controller("auth")
@@ -53,5 +56,35 @@ export class AuthController {
     } catch (error) {
       return res.redirect(`http://localhost:3021/auth/sign-in?error=auth_failed`);
     }
+  }
+
+  @Public()
+  @Post("login")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Login with email and request OTP" })
+  @ApiResponse({ status: 200, description: "OTP sent successfully" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.loginWithEmail(loginDto);
+  }
+
+  @Public()
+  @Post("verify-otp")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Verify OTP and complete login" })
+  @ApiResponse({ status: 200, description: "Login successful" })
+  @ApiResponse({ status: 401, description: "Invalid OTP" })
+  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
+    return this.authService.verifyOtp(verifyOtpDto);
+  }
+
+  @Public()
+  @Post("resend-otp")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Resend OTP" })
+  @ApiResponse({ status: 200, description: "OTP resent successfully" })
+  @ApiResponse({ status: 400, description: "Rate limit exceeded" })
+  async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
+    return this.authService.resendOtp(resendOtpDto);
   }
 }

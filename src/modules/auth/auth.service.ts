@@ -10,13 +10,20 @@ import { randomBytes } from "crypto";
 import { JwtService } from "@nestjs/jwt";
 import { TokenService } from "../token/token.service";
 import { AuthResponseDto } from "./dto/auth-response.dto";
+import { MailService } from "../mail/mail.service";
+import { OtpService } from "../otp/otp.service";
+import { LoginDto } from "./dto/login.dto";
+import { VerifyOtpDto } from "./dto/verify-otp.dto";
+import { ResendOtpDto } from "./dto/resend-otp.dto";
 
 @Injectable()
 export class AuthService {
     constructor(
         private userService: UserService,
         private jwtService: JwtService,
-          private tokenService: TokenService,
+        private tokenService: TokenService,
+        private mailService: MailService,
+        private otpService: OtpService,
     ) {}
 
     private generateRefreshTokenPayload(userPayload: any) {
@@ -67,5 +74,85 @@ export class AuthService {
         };
         
         return { accessToken, refreshToken, user: userResponse };
+    }
+
+    async loginWithEmail(loginDto: LoginDto): Promise<{ message: string }> {
+        const { email } = loginDto;
+
+        // Check if user exists
+        const user = await this.userService.findByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException('Email not found in our system');
+        }
+
+        // Check if user's application is approved
+        if (user.applicationStatus !== ApplicationStatus.APPROVED) {
+            throw new UnauthorizedException('Your account is not approved yet');
+        }
+
+        // Check rate limit
+        if (!this.otpService.canResendOtp(email)) {
+            const waitTime = this.otpService.getTimeUntilResend(email);
+            throw new BadRequestException(
+                `Please wait ${waitTime} seconds before requesting a new OTP`
+            );
+        }
+
+        // Generate and send OTP
+        const otp = this.otpService.generateOtp();
+        this.otpService.saveOtp(email, otp);
+
+        await this.mailService.sendOtpEmail(email, user.name, otp);
+
+        return {
+            message: 'OTP sent to your email address. Please check your inbox.',
+        };
+    }
+
+    async verifyOtp(verifyOtpDto: VerifyOtpDto): Promise<AuthResponseDto> {
+        const { email, otp } = verifyOtpDto;
+
+        // Verify OTP
+        const isValid = this.otpService.verifyOtp(email, otp);
+        if (!isValid) {
+            throw new UnauthorizedException('Invalid or expired OTP');
+        }
+
+        // Get user
+        const user = await this.userService.findByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException('User not found');
+        }
+
+        // Generate tokens and login
+        return this.loginWithUser(user);
+    }
+
+    async resendOtp(resendOtpDto: ResendOtpDto): Promise<{ message: string; waitTime?: number }> {
+        const { email } = resendOtpDto;
+
+        // Check if user exists
+        const user = await this.userService.findByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException('Email not found in our system');
+        }
+
+        // Check rate limit
+        if (!this.otpService.canResendOtp(email)) {
+            const waitTime = this.otpService.getTimeUntilResend(email);
+            throw new BadRequestException(
+                `Please wait ${waitTime} seconds before requesting a new OTP`
+            );
+        }
+
+        // Generate and send new OTP
+        const otp = this.otpService.generateOtp();
+        this.otpService.saveOtp(email, otp);
+
+        await this.mailService.sendOtpEmail(email, user.name, otp);
+
+        return {
+            message: 'New OTP sent to your email address.',
+        };
     }
 }
