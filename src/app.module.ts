@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import appConfig from './config/app.config';
 import databaseConfig from './database/config/database.config';
 import googleOauthConfig from './config/google-oauth.config';
+import awsConfig from './config/aws.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
 import { DataSource } from 'typeorm';
@@ -19,13 +20,15 @@ import { BatchInstructorModule } from './modules/batch-instructor/batch-instruct
 import { AuthModule } from './modules/auth/auth.module';
 import { TokenModule } from './modules/token/token.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ApplicationModule } from './modules/application/application.module';
+import { ApplicationSchedulerModule } from './modules/application/application-scheduler.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, googleOauthConfig],
+      load: [appConfig, databaseConfig, googleOauthConfig, awsConfig],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({
@@ -50,6 +53,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     BatchInstructorModule,
     AuthModule,
     TokenModule,
+    ApplicationModule,
+    ApplicationSchedulerModule,
   ],
 })
 export class AppModule {}
