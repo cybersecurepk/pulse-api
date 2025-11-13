@@ -5,15 +5,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Test } from '../test/entities/test.entity';
-import { TestScreenshot } from '../test/entities/test-screenshot.entity';
-import { TestAttempt } from '../test/entities/test-attempt.entity';
-import { CreateTestDto } from '../test/dto/create-test-dto';
-import { UpdateTestDto } from '../test/dto/update-test-dto';
+import { Repository, In } from 'typeorm';
+import { Test } from './entities/test.entity';
+import { TestScreenshot } from './entities/test-screenshot.entity';
+import { TestAttempt } from './entities/test-attempt.entity';
+import { CreateTestDto } from './dto/create-test-dto';
+import { UpdateTestDto } from './dto/update-test-dto';
 import { CreateScreenshotDto } from './dto/create-screenshot-dto';
 import { ScreenshotService } from './screenshot.service';
 import { TestAttemptResultDto } from './dto/test-attempt-result-dto';
+import { BatchTest } from '../batch-test/entities/batch-test.entity';
 
 @Injectable()
 export class TestService {
@@ -24,6 +25,8 @@ export class TestService {
     private screenshotRepository: Repository<TestScreenshot>,
     @InjectRepository(TestAttempt)
     private testAttemptRepository: Repository<TestAttempt>,
+    @InjectRepository(BatchTest)
+    private batchTestRepository: Repository<BatchTest>,
   ) {}
 
   async findAll(): Promise<Test[]> {
@@ -246,5 +249,120 @@ export class TestService {
       passed,
       passingCriteria: test.passingCriteria,
     };
+  }
+
+  // Get unattempted tests for a user
+  async getUnattemptedTestsForUser(userId: string): Promise<Test[]> {
+    // First, get all tests assigned to the user through batch assignments
+    const batchTests = await this.batchTestRepository.find({
+      where: {
+        batch: {
+          batchUsers: {
+            user: { id: userId },
+            isActive: true,
+          },
+        },
+        isActive: true,
+      },
+      relations: ['test', 'test.questions', 'test.questions.options'],
+    });
+
+    // Get the test IDs from batch assignments
+    const testIds = batchTests.map(bt => bt.test.id);
+
+    if (testIds.length === 0) {
+      return [];
+    }
+
+    // Get the actual tests with their details
+    const tests = await this.testRepository.find({
+      where: {
+        id: In(testIds),
+        isActive: true,
+      },
+      relations: ['questions', 'questions.options'],
+      order: {
+        questions: {
+          sortOrder: 'ASC',
+        },
+      },
+    });
+
+    // Get test attempts for this user
+    const attempts = await this.testAttemptRepository.find({
+      where: {
+        userId,
+        testId: In(testIds),
+      },
+    });
+
+    // Get test IDs that have been attempted
+    const attemptedTestIds = attempts.map(attempt => attempt.testId);
+
+    // Filter out tests that have been attempted
+    const unattemptedTests = tests.filter(test => !attemptedTestIds.includes(test.id));
+
+    // Remove isCorrect flag from options to hide correct answers from frontend
+    return unattemptedTests.map(test => ({
+      ...test,
+      questions: test.questions.map(question => ({
+        ...question,
+        options: question.options.map(option => {
+          const { isCorrect, ...optionWithoutAnswer } = option;
+          return optionWithoutAnswer;
+        }),
+      })),
+    })) as Test[];
+  }
+
+  // Get test attempts for a user with test details
+  async getUserTestAttempts(userId: string) {
+    try {
+      const attempts = await this.testAttemptRepository.find({
+        where: { userId },
+        relations: ['test', 'test.questions', 'test.questions.options'],
+        order: { createdAt: 'DESC' },
+      });
+
+      // Remove isCorrect flag from options to hide correct answers from frontend
+      return attempts.map(attempt => {
+        if (attempt.test) {
+          return {
+            ...attempt,
+            test: {
+              ...attempt.test,
+              questions: attempt.test.questions.map(question => ({
+                ...question,
+                options: question.options.map(option => {
+                  const { isCorrect, ...optionWithoutAnswer } = option;
+                  return optionWithoutAnswer;
+                }),
+              })),
+            },
+          };
+        }
+        return attempt;
+      });
+    } catch (error) {
+      console.error('Error fetching user test attempts:', error);
+      throw error;
+    }
+  }
+
+  // Get all test attempts for admin panel with user and test details
+  async getAllTestAttempts() {
+    const attempts = await this.testAttemptRepository.find({
+      relations: ['test', 'user'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return attempts.map(attempt => ({
+      ...attempt,
+      user: {
+        id: attempt.user.id,
+        name: attempt.user.name || attempt.user.email,
+        email: attempt.user.email,
+      },
+    }));
   }
 }

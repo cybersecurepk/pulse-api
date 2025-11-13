@@ -8,6 +8,11 @@ import {
   Req,
   Get,
   Res,
+  UnauthorizedException,
+  Catch,
+  ExceptionFilter,
+  ArgumentsHost,
+  UseFilters,
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
@@ -18,6 +23,34 @@ import type { Request, Response } from "express";
 import { LoginDto } from "./dto/login.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 import { ResendOtpDto } from "./dto/resend-otp.dto";
+
+// Custom exception filter for Google OAuth errors
+@Catch()
+class GoogleOAuthExceptionFilter implements ExceptionFilter {
+  catch(exception: any, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    
+    // Determine the appropriate error message based on the exception type
+    let redirectError = 'auth_failed';
+    
+    if (exception instanceof UnauthorizedException) {
+      if (exception.message.includes('not approved')) {
+        redirectError = 'not_approved';
+      } else if (exception.message.includes('not found')) {
+        redirectError = 'email_not_found';
+      } else {
+        redirectError = 'auth_failed';
+      }
+    } else if (exception.name === 'AuthorizationError' || 
+               (exception.oauthError && exception.oauthError === 'access_denied')) {
+      redirectError = 'google_access_denied';
+    }
+    
+    // Redirect to frontend login page with error parameter
+    response.redirect(`http://localhost:3021/auth/sign-in?error=${redirectError}`);
+  }
+}
 
 @ApiTags("Authentication")
 @Controller("auth")
@@ -38,8 +71,11 @@ export class AuthController {
   @ApiOperation({ summary: "Google callback" })
   @ApiResponse({ status: 200, description: "Google callback successful" })
   @ApiResponse({ status: 401, description: "Invalid credentials" })
+  @UseFilters(GoogleOAuthExceptionFilter)
   async googleCallback(@Req() req: Request & { user?: any }, @Res() res: Response) {
     try {
+      // If we reach here, authentication was successful
+      // But let's double-check that we have a user
       if (!req.user) {
         return res.redirect(`http://localhost:3021/auth/sign-in?error=auth_failed`);
       }
@@ -54,7 +90,22 @@ export class AuthController {
       const redirectUrl = `http://localhost:3021/auth/google-callback?token=${accessToken}&refreshToken=${refreshToken}&user=${encodeURIComponent(userData)}`;
       return res.redirect(redirectUrl);
     } catch (error) {
-      return res.redirect(`http://localhost:3021/auth/sign-in?error=auth_failed`);
+      console.error('Google OAuth Callback Error:', error);
+      
+      // Determine the appropriate error message based on the error type
+      let redirectError = 'auth_failed';
+      
+      if (error instanceof UnauthorizedException) {
+        if (error.message.includes('not approved')) {
+          redirectError = 'not_approved';
+        } else if (error.message.includes('not found')) {
+          redirectError = 'email_not_found';
+        } else {
+          redirectError = 'auth_failed';
+        }
+      }
+      
+      return res.redirect(`http://localhost:3021/auth/sign-in?error=${redirectError}`);
     }
   }
 
