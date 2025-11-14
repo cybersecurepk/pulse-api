@@ -1,22 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { SESEmailService } from '../../utils/ses-email.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class MailService {
-  private transporter: nodemailer.Transporter;
+  private sesService: SESEmailService;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.MAIL_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASSWORD,
-      },
-    });
+    this.sesService = SESEmailService.getInstance();
   }
 
   async sendOtpEmail(email: string, userName: string, otp: string): Promise<void> {
@@ -26,11 +18,10 @@ export class MailService {
     htmlTemplate = htmlTemplate.replace('{{userName}}', userName);
     htmlTemplate = htmlTemplate.replace('{{otp}}', otp);
 
-    await this.transporter.sendMail({
-      from: process.env.MAIL_FROM || '"01HRMS" <noreply@01hrms.com>',
-      to: email,
-      subject: 'Your OTP Verification Code',
-      html: htmlTemplate,
-    });
+    await this.sesService.sendEmail(
+      email,
+      'Your OTP Verification Code',
+      htmlTemplate
+    );
   }
 }

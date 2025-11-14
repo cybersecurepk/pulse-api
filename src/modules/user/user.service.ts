@@ -51,9 +51,17 @@ export class UserService {
     const user = await this.findOne(id);
     Object.assign(user, updateUserDto);
     
-    // If application status is being updated to APPROVED, change role to USER
-    if (updateUserDto.applicationStatus === 'approved') {
-      user.role = UserRole.USER;
+    // Only change role to USER when application status is being updated to APPROVED
+    // But don't override explicitly provided roles
+    if (updateUserDto.applicationStatus === 'approved' && updateUserDto.role === undefined) {
+      // Check if user is an admin - if so, don't change their role
+      const isAdmin = user.role === UserRole.SUPER_ADMIN || 
+                     user.role === UserRole.COMPANY_ADMIN;
+      
+      // Only change role if the user is not an admin
+      if (!isAdmin) {
+        user.role = UserRole.USER;
+      }
     }
     
     return await this.userRepository.save(user);
