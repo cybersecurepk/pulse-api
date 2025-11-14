@@ -31,6 +31,12 @@ export class TestController {
     return this.testService.findAll();
   }
 
+   @Get('attempts')
+  @ApiOperation({ summary: 'Get all test attempts for admin panel' })
+  async getAllTestAttempts() {
+    return this.testService.getAllTestAttempts();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a test by ID' })
   findOne(@Param('id') id: string): Promise<Test> {
@@ -98,4 +104,18 @@ export class TestController {
       submitTestAttemptDto.timeSpent,
     );
   }
+
+  @Get('user/:userId/unattempted')
+  @ApiOperation({ summary: 'Get unattempted tests for a user' })
+  async getUnattemptedTestsForUser(@Param('userId') userId: string) {
+    return this.testService.getUnattemptedTestsForUser(userId);
+  }
+
+  @Get('user/:userId/attempts')
+  @ApiOperation({ summary: 'Get test attempts for a user' })
+  async getUserTestAttempts(@Param('userId') userId: string) {
+    return this.testService.getUserTestAttempts(userId);
+  }
+
+ 
 }

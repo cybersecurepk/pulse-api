@@ -7,9 +7,10 @@ import { TestScreenshot } from './entities/test-screenshot.entity';
 import { TestAttempt } from './entities/test-attempt.entity';
 import { Question } from '../question/entities/question.entity';
 import { Option } from '../option/entities/option.entity';
+import { BatchTest } from '../batch-test/entities/batch-test.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Test, TestScreenshot, TestAttempt, Question, Option])],
+  imports: [TypeOrmModule.forFeature([Test, TestScreenshot, TestAttempt, Question, Option, BatchTest])],
   controllers: [TestController],
   providers: [TestService],
   exports: [TestService],
