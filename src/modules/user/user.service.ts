@@ -5,12 +5,14 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { UserRole } from '../../enums/user-role.enum';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private mailService: MailService
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -49,6 +51,7 @@ export class UserService {
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
+    const oldApplicationStatus = user.applicationStatus;
     Object.assign(user, updateUserDto);
     
     // Only change role to USER when application status is being updated to APPROVED
@@ -64,7 +67,26 @@ export class UserService {
       }
     }
     
-    return await this.userRepository.save(user);
+    const updatedUser = await this.userRepository.save(user);
+    
+    // // Send email notification if application status changed
+    // if (oldApplicationStatus !== user.applicationStatus && 
+    //     (user.applicationStatus === 'approved' || user.applicationStatus === 'rejected')) {
+      
+    //   try {
+    //     await this.mailService.sendApplicationStatusEmail(
+    //       user.email,
+    //       user.name,
+    //       user.applicationStatus === 'approved',
+    //       user.applicationStatus === 'rejected' ? 'Application did not meet requirements' : undefined
+    //     );
+    //   } catch (error) {
+    //     console.error('Failed to send application status email:', error);
+    //     // Don't throw error as we don't want to fail the update if email fails
+    //   }
+    // }
+    
+    return updatedUser;
   }
 
   async remove(id: string): Promise<void> {
