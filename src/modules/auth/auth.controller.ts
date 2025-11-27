@@ -24,6 +24,15 @@ import { LoginDto } from "./dto/login.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 import { ResendOtpDto } from "./dto/resend-otp.dto";
 
+// DTO for Google authentication from frontend
+class GoogleAuthDto {
+  accessToken: string;
+  refreshToken: string;
+  email: string;
+  name: string;
+  picture: string;
+}
+
 // Custom exception filter for Google OAuth errors
 @Catch()
 class GoogleOAuthExceptionFilter implements ExceptionFilter {
@@ -80,8 +89,11 @@ export class AuthController {
         return res.redirect(`http://localhost:3021/auth/sign-in?error=auth_failed`);
       }
       
+      // Validate the Google user against our database
+      const validatedUser = await this.authService.validateGoogleUser(req.user);
+      
       // Generate access token for the user
-      const { accessToken, refreshToken, user } = await this.authService.loginWithUser(req.user);
+      const { accessToken, refreshToken, user } = await this.authService.loginWithUser(validatedUser);
       
       // Encode user data as base64 to pass in URL
       const userData = Buffer.from(JSON.stringify(user)).toString('base64');
@@ -106,6 +118,57 @@ export class AuthController {
       }
       
       return res.redirect(`http://localhost:3021/auth/sign-in?error=${redirectError}`);
+    }
+  }
+
+  // New endpoint for handling Google authentication from frontend NextAuth
+  @Public()
+  @Post("google")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Authenticate with Google OAuth tokens from frontend" })
+  @ApiResponse({ status: 200, description: "Authentication successful" })
+  @ApiResponse({ status: 401, description: "Invalid credentials" })
+  async googleAuthFromFrontend(@Body() googleAuthDto: GoogleAuthDto, @Res() res: Response) {
+    try {
+      // Here you would typically validate the Google tokens with Google's API
+      // For now, we'll simulate getting user info from Google tokens
+      
+      // Check if user exists in database
+      const user = await this.authService.validateGoogleUser({
+        email: googleAuthDto.email,
+        name: googleAuthDto.name,
+        picture: googleAuthDto.picture
+      });
+      
+      // Generate access token for the user
+      const { accessToken, refreshToken } = await this.authService.loginWithUser(user);
+      
+      // Return the tokens and user data
+      return res.json({
+        accessToken,
+        refreshToken,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          applicationStatus: user.applicationStatus,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        }
+      });
+    } catch (error) {
+      console.error('Google Auth from Frontend Error:', error);
+      
+      if (error instanceof UnauthorizedException) {
+        return res.status(HttpStatus.UNAUTHORIZED).json({
+          message: error.message
+        });
+      }
+      
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Authentication failed'
+      });
     }
   }
 
