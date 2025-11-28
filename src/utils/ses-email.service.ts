@@ -62,7 +62,7 @@ export class SESEmailService {
           Data: subject,
         },
       },
-      Source: process.env.AWS_SES_FROM_EMAIL!
+      Source: process.env.AWS_SES_FROM_EMAIL || '"01HRMS" <noreply@01hrms.com>'
     };
 
     try {
@@ -86,7 +86,7 @@ export class SESEmailService {
       },
       Template: templateName,
       TemplateData: JSON.stringify(data),
-      Source: process.env.AWS_SES_FROM_EMAIL!,
+      Source: process.env.AWS_SES_FROM_EMAIL || '"01HRMS" <noreply@01hrms.com>',
     };
 
     await this.ses

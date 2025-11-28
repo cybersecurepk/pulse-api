@@ -27,7 +27,7 @@ export class UserResponseDto {
   @ApiProperty()
   email: string;
 
-  @ApiProperty({ enum: ['male', 'female', 'other'] })
+  @ApiProperty({ enum: ['Male', 'Female', 'Other'] })
   gender: string;
 
   @ApiProperty()

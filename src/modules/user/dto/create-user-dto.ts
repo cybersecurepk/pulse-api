@@ -44,8 +44,8 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
-  @ApiProperty({ enum: ['male', 'female', 'other'], example: 'male' })
-  @IsEnum(['male', 'female', 'other'])
+  @ApiProperty({ enum: ['Male', 'Female', 'Other'], example: 'Male' })
+  @IsEnum(['Male', 'Female', 'Other'])
   gender: string;
 
   @ApiProperty({ example: '+1234567890' })
@@ -64,6 +64,11 @@ export class CreateUserDto {
   @ApiProperty({ example: 'Los Angeles' })
   @IsString()
   permanentCity: string;
+
+  // @ApiPropertyOptional({ example: 'https://example.com/profile.jpg' })
+  // @IsString()
+  // @IsOptional()
+  // profileImage?: string;
 
   // Education
   @ApiProperty({ enum: ['12', '14', '16', '18'], example: '16' })

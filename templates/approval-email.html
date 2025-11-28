@@ -3,8 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Application Status - Pulse</title>
-
+    <title>{{subject}}</title>
     <style type="text/css">
       @media only screen and (min-width: 481px) {
         .main-table {
@@ -16,15 +15,11 @@
         .outer-padding {
           padding: 20px 10px !important;
         }
-        .status-box {
-          padding: 20px !important;
-        }
         h1 {
           font-size: 24px !important;
           line-height: 1.2 !important;
         }
       }
-
       @media only screen and (max-width: 480px) {
         .main-table {
           width: 100% !important;
@@ -34,9 +29,6 @@
         }
         .outer-padding {
           padding: 15px 5px !important;
-        }
-        .status-box {
-          padding: 15px !important;
         }
         h1 {
           font-size: 22px !important;
@@ -53,24 +45,21 @@
       -ms-text-size-adjust: 100%;
       background-color: #f5f7fa;
       height: 100vh;
-    "
-  >
+    ">
     <table
       role="presentation"
-      style="background: #f5f7fa; margin: auto; height: 100vh"
-    >
+      style="background: #f5f7fa; margin: auto; height: 100vh">
       <tr>
         <td class="outer-padding" style="padding: 40px 20px">
           <table
             role="presentation"
             class="main-table"
-            style="max-width: 550px; width: 100%"
-          >
+            style="max-width: 550px; width: 100%">
             <tr>
               <td style="padding-bottom: 30px">
                 <img
                   src="{{headerLogo}}"
-                  alt="Pulse"
+                  alt="{{companyName}}"
                   width="140"
                   height="auto"
                   style="
@@ -81,11 +70,9 @@
                     text-decoration: none;
                     max-width: 100%;
                     height: auto;
-                  "
-                />
+                  " />
               </td>
             </tr>
-
             <tr>
               <td>
                 <table
@@ -99,19 +86,14 @@
                     border-bottom: 1px solid #e8ecef;
                     border-left: 1px solid #e8ecef;
                     border-right: 1px solid #e8ecef;
-                  "
-                >
-                  <!-- Header Bar - Dynamic color based on status -->
+                  ">
                   <tr>
-                    <td style="background: {{#if isApproved}}#10b981{{else}}#ef4444{{/if}}; height: 5px"></td>
+                    <td style="background: #10b981; height: 5px"></td>
                   </tr>
-                  
                   <tr>
                     <td
                       class="content-padding"
-                      style="padding: 40px 40px 30px 40px"
-                    >
-                      <!-- Main Heading -->
+                      style="padding: 40px 40px 30px 40px">
                       <h1
                         style="
                           margin: 0 0 20px 0;
@@ -120,12 +102,9 @@
                           color: #1a365d;
                           line-height: 1.3;
                           font-family: 'Segoe UI', Arial, sans-serif;
-                        "
-                      >
-                        Application Status Update
+                        ">
+                        {{heading}}
                       </h1>
-
-                      <!-- Greeting -->
                       <p
                         style="
                           margin: 0 0 20px 0;
@@ -133,53 +112,9 @@
                           color: #4a5568;
                           line-height: 1.5;
                           font-family: 'Segoe UI', Arial, sans-serif;
-                        "
-                      >
-                        Dear {{applicantName}},
+                        ">
+                        Dear {{userName}},
                       </p>
-
-                      <!-- Status Box - Dynamic styling based on approval -->
-                      <div
-                        class="status-box"
-                        style="
-                          background: {{#if isApproved}}#d1fae5{{else}}#fee2e2{{/if}};
-                          border-left: 4px solid {{#if isApproved}}#10b981{{else}}#ef4444{{/if}};
-                          border-radius: 8px;
-                          padding: 25px;
-                          margin: 25px 0;
-                        "
-                      >
-                        <p
-                          style="
-                            margin: 0 0 10px 0;
-                            font-size: 14px;
-                            color: {{#if isApproved}}#065f46{{else}}#991b1b{{/if}};
-                            font-weight: 600;
-                            text-transform: uppercase;
-                            letter-spacing: 0.5px;
-                            font-family: 'Segoe UI', Arial, sans-serif;
-                          "
-                        >
-                          Status: {{#if isApproved}}APPROVED{{else}}REJECTED{{/if}}
-                        </p>
-                        <p
-                          style="
-                            margin: 0;
-                            font-size: 18px;
-                            color: {{#if isApproved}}#047857{{else}}#b91c1c{{/if}};
-                            font-weight: 600;
-                            font-family: 'Segoe UI', Arial, sans-serif;
-                          "
-                        >
-                          {{#if isApproved}}
-                            ✓ Congratulations! Your application has been approved.
-                          {{else}}
-                            We regret to inform you that your application has not been approved at this time.
-                          {{/if}}
-                        </p>
-                      </div>
-
-                      <!-- Message Content -->
                       <p
                         style="
                           margin: 0 0 20px 0;
@@ -187,17 +122,10 @@
                           color: #4a5568;
                           line-height: 1.6;
                           font-family: 'Segoe UI', Arial, sans-serif;
-                        "
-                      >
-                        {{#if isApproved}}
-                          We are pleased to inform you that your application has been successfully approved. Welcome to our program!
-                        {{else}}
-                          Thank you for your interest in our program. After careful consideration, we have decided not to move forward with your application at this time.
-                        {{/if}}
+                        ">
+                        {{message}}
                       </p>
-
-                      {{#if isApproved}}
-                      <!-- Next Steps for Approved Applicants -->
+                      {{#if details}}
                       <div
                         style="
                           background: #f0f9ff;
@@ -205,8 +133,7 @@
                           padding: 20px;
                           margin: 20px 0;
                           border: 1px solid #bae6fd;
-                        "
-                      >
+                        ">
                         <p
                           style="
                             margin: 0 0 15px 0;
@@ -214,8 +141,7 @@
                             color: #0c4a6e;
                             font-weight: 600;
                             font-family: 'Segoe UI', Arial, sans-serif;
-                          "
-                        >
+                          ">
                           Next Steps:
                         </p>
                         <ul
@@ -225,60 +151,17 @@
                             color: #475569;
                             line-height: 1.8;
                             font-family: 'Segoe UI', Arial, sans-serif;
-                          "
-                        >
-                          <li>Log in to your account to access the program details</li>
-                          <li>Review the batch schedule and important dates</li>
-                          <li>Complete any required pre-program materials</li>
-                          <li>Connect with your assigned instructor</li>
+                          ">
+                          {{#each details}}
+                          <li>{{this}}</li>
+                          {{/each}}
                         </ul>
                       </div>
-                      {{else}}
-                      <!-- Feedback for Rejected Applicants -->
-                      <p
-                        style="
-                          margin: 0 0 20px 0;
-                          font-size: 16px;
-                          color: #4a5568;
-                          line-height: 1.6;
-                          font-family: 'Segoe UI', Arial, sans-serif;
-                        "
-                      >
-                        {{#if rejectionReason}}
-                          <strong>Reason:</strong> {{rejectionReason}}
-                        {{else}}
-                          This decision was based on various factors including program capacity and applicant qualifications. We encourage you to apply again in future sessions.
-                        {{/if}}
-                      </p>
-                      {{/if}}
-
-                      {{#if additionalNotes}}
-                      <!-- Additional Notes -->
-                      <p
-                        style="
-                          margin: 20px 0;
-                          font-size: 15px;
-                          color: #4a5568;
-                          line-height: 1.6;
-                          font-family: 'Segoe UI', Arial, sans-serif;
-                          padding: 15px;
-                          background: #f8fafc;
-                          border-radius: 6px;
-                        "
-                      >
-                        <strong>Note:</strong> {{additionalNotes}}
-                      </p>
-                      {{/if}}
-
-                      <!-- Call to Action Button - Only for Approved -->
-                      {{#if isApproved}}
-                      {{#if callToAction}}
                       <table
                         role="presentation"
                         cellspacing="0"
                         cellpadding="0"
-                        width="100%"
-                      >
+                        width="100%">
                         <tr>
                           <td style="padding: 25px 0 20px 0">
                             <a
@@ -296,17 +179,12 @@
                                 font-weight: 600;
                                 font-family: 'Segoe UI', Arial, sans-serif;
                                 box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-                              "
-                            >
-                              View My Dashboard
+                              ">
+                              {{ctaText}}
                             </a>
                           </td>
                         </tr>
                       </table>
-                      {{/if}}
-                      {{/if}}
-
-                      <!-- Closing Message -->
                       <p
                         style="
                           margin: 20px 0 0 0;
@@ -314,33 +192,23 @@
                           color: #4a5568;
                           line-height: 1.5;
                           font-family: 'Segoe UI', Arial, sans-serif;
-                        "
-                      >
-                        {{#if isApproved}}
-                          We look forward to having you in the program!
-                        {{else}}
-                          Thank you for your interest, and we wish you the best in your future endeavors.
-                        {{/if}}
+                        ">
+                        We look forward to seeing you succeed on the platform!
                       </p>
-
                       <p
                         style="
                           margin: 10px 0 0 0;
                           font-size: 15px;
                           color: #4a5568;
                           font-family: 'Segoe UI', Arial, sans-serif;
-                        "
-                      >
-                        Best regards,<br />
-                        <strong>The Pulse Team</strong>
+                        ">
+                        Best regards,<br /><strong>The {{companyName}} Team</strong>
                       </p>
                     </td>
                   </tr>
                 </table>
               </td>
             </tr>
-
-            <!-- Footer -->
             <tr>
               <td style="padding-top: 40px">
                 <table role="presentation">
@@ -348,7 +216,7 @@
                     <td class="footer-logo" style="padding-bottom: 20px">
                       <img
                         src="{{footerLogo}}"
-                        alt="Pulse"
+                        alt="{{companyName}}"
                         width="90"
                         height="auto"
                         style="
@@ -359,12 +227,10 @@
                           opacity: 0.7;
                           max-width: 100%;
                           height: auto;
-                        "
-                      />
+                        " />
                     </td>
                   </tr>
                 </table>
-
                 <p
                   style="
                     margin: 0 0 15px 0;
@@ -372,12 +238,10 @@
                     color: #718096;
                     line-height: 1.5;
                     font-family: 'Segoe UI', Arial, sans-serif;
-                  "
-                >
+                  ">
                   <strong>Please note:</strong> This is an automated message.
                   Replies to this email are not monitored.
                 </p>
-
                 <p
                   style="
                     margin: 0;
@@ -386,9 +250,8 @@
                     line-height: 1.4;
                     font-family: 'Segoe UI', Arial, sans-serif;
                     text-align: center;
-                  "
-                >
-                  {{!-- <strong>Powered by 01HIRE Technologies</strong> --}}
+                  ">
+                  <strong>Powered by 01Hire Technologies</strong>
                 </p>
               </td>
             </tr>

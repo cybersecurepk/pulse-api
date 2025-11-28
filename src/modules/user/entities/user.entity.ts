@@ -27,7 +27,7 @@ export class User {
   @Column({ length: 100 })
   email: string;
 
-  @Column({ type: 'enum', enum: ['male', 'female', 'other'] })
+  @Column({ type: 'enum', enum: ['Male', 'Female', 'Other'] })
   gender: string;
 
   @Column({ length: 50 })
@@ -41,6 +41,9 @@ export class User {
 
   @Column({ length: 100 })
   permanentCity: string;
+
+  // @Column({ length: 500, nullable: true })
+  // profileImage?: string;
 
   @Column({ type: 'enum', enum: ['12', '14', '16', '18'] })
   yearsOfEducation: string;

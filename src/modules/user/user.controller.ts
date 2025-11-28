@@ -67,19 +67,41 @@ export class UserController {
   ): Promise<User> {
     // If email is being updated, check for duplicates
     if (updateUserDto.email) {
-      const existingUser = await this.userService.findByEmail(updateUserDto.email);
-      if (existingUser && existingUser.id !== id) {
-        throw new HttpException(
-          'Email already exists',
-          HttpStatus.CONFLICT,
-        );
+      const existingUser = await this.userService.findOne(id);
+      if (existingUser && existingUser.email !== updateUserDto.email) {
+        const emailUser = await this.userService.findByEmail(updateUserDto.email);
+        if (emailUser && emailUser.id !== id) {
+          throw new HttpException(
+            'Email already exists',
+            HttpStatus.CONFLICT,
+          );
+        }
       }
     }
     
-    // If application status is being updated to APPROVED, change role to USER
+    // Get the existing user to check their current role and status
     const existingUser = await this.userService.findOne(id);
+    
+    // Only change role to USER when application status is being changed from non-approved to approved
+    // But never change role for admin users (super_admin, company_admin)
     if (updateUserDto.applicationStatus === 'approved' && existingUser.applicationStatus !== 'approved') {
-      updateUserDto.role = UserRole.USER;
+      // Check if user is an admin - if so, don't change their role
+      const isAdmin = existingUser.role === UserRole.SUPER_ADMIN || 
+                     existingUser.role === UserRole.COMPANY_ADMIN;
+      
+      // Only change role if the user is not an admin and role is not explicitly provided
+      if (!isAdmin && updateUserDto.role === undefined) {
+        updateUserDto.role = UserRole.USER;
+      }
+    }
+    
+    // Explicitly preserve admin roles if they're not being changed
+    if (updateUserDto.role === undefined) {
+      const isAdmin = existingUser.role === UserRole.SUPER_ADMIN || 
+                     existingUser.role === UserRole.COMPANY_ADMIN;
+      if (isAdmin) {
+        updateUserDto.role = existingUser.role;
+      }
     }
     
     return this.userService.update(id, updateUserDto);
