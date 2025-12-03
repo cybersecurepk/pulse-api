@@ -19,7 +19,9 @@ export class QuestionService {
     testId: string,
     createQuestionDto: CreateQuestionDto,
   ): Promise<Question> {
-    const test = await this.testRepository.findOne({ where: { id: testId } });
+    const test = await this.testRepository.findOne({ 
+      where: { id: testId, isDeleted: false } 
+    });
     if (!test) {
       throw new NotFoundException(`Test with ID ${testId} not found`);
     }
@@ -34,7 +36,7 @@ export class QuestionService {
 
   async findAllByTest(testId: string): Promise<Question[]> {
     return await this.questionRepository.find({
-      where: { test: { id: testId } },
+      where: { test: { id: testId, isDeleted: false }, isDeleted: false },
       relations: ['options'],
       order: { createdAt: 'ASC' },
     });
@@ -42,7 +44,7 @@ export class QuestionService {
 
   async findOne(id: string): Promise<Question> {
     const question = await this.questionRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
       relations: ['options', 'test'],
     });
 
@@ -63,9 +65,8 @@ export class QuestionService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.questionRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Question with ID ${id} not found`);
-    }
+    const question = await this.findOne(id);
+    question.isDeleted = true;
+    await this.questionRepository.save(question);
   }
 }

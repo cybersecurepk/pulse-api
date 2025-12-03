@@ -14,13 +14,14 @@ export class InstructorService {
 
   async findAll(): Promise<Instructor[]> {
     return await this.instructorRepository.find({
+      where: { isDeleted: false },
       order: { createdAt: 'DESC' },
     });
   }
 
   async findOne(id: string): Promise<Instructor> {
     const instructor = await this.instructorRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
     });
 
     if (!instructor) {
@@ -32,7 +33,7 @@ export class InstructorService {
 
   async findByEmail(email: string): Promise<Instructor | null> {
     return await this.instructorRepository.findOne({
-      where: { email },
+      where: { email, isDeleted: false },
     });
   }
 
@@ -51,10 +52,8 @@ export class InstructorService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.instructorRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Instructor with ID ${id} not found`);
-    }
+    const instructor = await this.findOne(id);
+    instructor.isDeleted = true;
+    await this.instructorRepository.save(instructor);
   }
 }
-

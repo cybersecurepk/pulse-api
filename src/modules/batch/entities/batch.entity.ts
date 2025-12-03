@@ -58,6 +58,9 @@ export class Batch {
   @Column({ type: 'enum', enum: SessionType, default: SessionType.REMOTE })
   sessionType: SessionType;
 
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',

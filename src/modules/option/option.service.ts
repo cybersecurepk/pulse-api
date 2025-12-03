@@ -20,7 +20,7 @@ export class OptionService {
     createOptionDto: CreateOptionDto,
   ): Promise<Option> {
     const question = await this.questionRepository.findOne({
-      where: { id: questionId },
+      where: { id: questionId, isDeleted: false },
     });
     if (!question) {
       throw new NotFoundException(`Question with ID ${questionId} not found`);
@@ -36,14 +36,14 @@ export class OptionService {
 
   async findAllByQuestion(questionId: string): Promise<Option[]> {
     return await this.optionRepository.find({
-      where: { question: { id: questionId } },
+      where: { question: { id: questionId, isDeleted: false }, isDeleted: false },
       order: { createdAt: 'ASC' },
     });
   }
 
   async findOne(id: string): Promise<Option> {
     const option = await this.optionRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
       relations: ['question'],
     });
 
@@ -61,9 +61,8 @@ export class OptionService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.optionRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Option with ID ${id} not found`);
-    }
+    const option = await this.findOne(id);
+    option.isDeleted = true;
+    await this.optionRepository.save(option);
   }
 }

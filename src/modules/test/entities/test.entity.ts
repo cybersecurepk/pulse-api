@@ -39,6 +39,9 @@ export class Test {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',

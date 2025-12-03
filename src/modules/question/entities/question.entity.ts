@@ -10,6 +10,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 @Entity('questions')
 export class Question {
   @PrimaryGeneratedColumn('uuid')
@@ -26,6 +27,9 @@ export class Question {
 
   @Column({ type: 'int', default: 1 })
   points: number;
+
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
 
   @CreateDateColumn({
     type: 'timestamp',

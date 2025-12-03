@@ -31,6 +31,7 @@ export class TestService {
 
   async findAll(): Promise<Test[]> {
     return await this.testRepository.find({
+      where: { isDeleted: false },
       relations: ['questions', 'questions.options'],
       order: {
         questions: {
@@ -42,7 +43,7 @@ export class TestService {
 
   async findOne(id: string): Promise<Test> {
     const test = await this.testRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
       relations: ['questions', 'questions.options', 'screenshots'],
     });
 
@@ -58,7 +59,7 @@ export class TestService {
     console.log('Creating test with questions:', { questions });
     const testCode = createTestDto.testCode.toUpperCase();
     const alreadyExist = await this.testRepository.findOne({
-      where: { testCode },
+      where: { testCode, isDeleted: false },
     });
     if (alreadyExist) {
       throw new BadRequestException('Test with this code already exists');
@@ -79,15 +80,14 @@ export class TestService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.testRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Test with ID ${id} not found`);
-    }
+    const test = await this.findOne(id);
+    test.isDeleted = true;
+    await this.testRepository.save(test);
   }
 
   async getActiveTestWithQuestions(testId: string) {
     const test = await this.testRepository.findOne({
-      where: { id: testId },
+      where: { id: testId, isDeleted: false },
       relations: ['questions', 'questions.options'],
     });
     if (!test) throw new NotFoundException('Test not found');
@@ -106,7 +106,9 @@ export class TestService {
     testId: string,
     createScreenshotDto: CreateScreenshotDto,
   ): Promise<TestScreenshot> {
-    const test = await this.testRepository.findOne({ where: { id: testId } });
+    const test = await this.testRepository.findOne({ 
+      where: { id: testId, isDeleted: false } 
+    });
 
     if (!test) {
       throw new NotFoundException(`Test with ID ${testId} not found`);
@@ -121,7 +123,8 @@ export class TestService {
   }
 
   async getScreenshotsByTestId(testId: string): Promise<TestScreenshot[]> {
-    return await this.screenshotRepository.find({ where: { test: { id: testId } },
+    return await this.screenshotRepository.find({ 
+      where: { test: { id: testId, isDeleted: false } },
       order: {
         createdAt: 'DESC',
       },
@@ -131,7 +134,7 @@ export class TestService {
   // Get test for user attempt (without correct answer flags)
   async getTestForAttempt(testId: string) {
     const test = await this.testRepository.findOne({
-      where: { id: testId },
+      where: { id: testId, isDeleted: false },
       relations: ['questions', 'questions.options'],
       order: {
         questions: {
@@ -168,7 +171,7 @@ export class TestService {
   ): Promise<TestAttemptResultDto> {
     // Fetch test with questions and options using existing relationships
     const test = await this.testRepository.findOne({
-      where: { id: testId },
+      where: { id: testId, isDeleted: false },
       relations: ['questions', 'questions.options'],
     });
 
@@ -279,6 +282,7 @@ export class TestService {
       where: {
         id: In(testIds),
         isActive: true,
+        isDeleted: false,
       },
       relations: ['questions', 'questions.options'],
       order: {
@@ -319,7 +323,7 @@ export class TestService {
   async getUserTestAttempts(userId: string) {
     try {
       const attempts = await this.testAttemptRepository.find({
-        where: { userId },
+        where: { userId, isDeleted: false },
         relations: ['test', 'test.questions', 'test.questions.options'],
         order: { createdAt: 'DESC' },
       });
@@ -352,6 +356,7 @@ export class TestService {
   // Get all test attempts for admin panel with user and test details
   async getAllTestAttempts() {
     const attempts = await this.testAttemptRepository.find({
+      where: { isDeleted: false },
       relations: ['test', 'user'],
       order: { createdAt: 'DESC' },
     });
@@ -366,3 +371,7 @@ export class TestService {
     }));
   }
 }
+
+
+
+

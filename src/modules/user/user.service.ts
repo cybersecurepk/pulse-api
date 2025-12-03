@@ -17,13 +17,14 @@ export class UserService {
 
   async findAll(): Promise<User[]> {
     return await this.userRepository.find({
+      where: { isDeleted: false },
       order: { createdAt: 'DESC' },
     });
   }
 
   async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
     });
 
     if (!user) {
@@ -35,7 +36,7 @@ export class UserService {
 
   async findByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({
-      where: { email },
+      where: { email, isDeleted: false },
     });
   }
 
@@ -90,15 +91,14 @@ export class UserService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.userRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
+    const user = await this.findOne(id);
+    user.isDeleted = true;
+    await this.userRepository.save(user);
   }
 
   async findByApplicationStatus(status: string): Promise<User[]> {
     return await this.userRepository.find({
-      where: { applicationStatus: status as any },
+      where: { applicationStatus: status as any, isDeleted: false },
       order: { createdAt: 'DESC' },
     });
   }

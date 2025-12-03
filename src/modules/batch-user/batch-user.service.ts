@@ -24,6 +24,7 @@ export class BatchUserService {
 
   async findAll(): Promise<BatchUser[]> {
     return await this.batchUserRepository.find({
+      where: { isDeleted: false },
       relations: ['batch', 'user'],
       order: { createdAt: 'DESC' },
     });
@@ -31,7 +32,7 @@ export class BatchUserService {
 
   async findByBatch(batchId: string): Promise<BatchUser[]> {
     return await this.batchUserRepository.find({
-      where: { batch: { id: batchId } },
+      where: { batch: { id: batchId }, isDeleted: false },
       relations: ['batch', 'user'],
       order: { createdAt: 'DESC' },
     });
@@ -39,7 +40,7 @@ export class BatchUserService {
 
   async findByUser(userId: string): Promise<BatchUser[]> {
     return await this.batchUserRepository.find({
-      where: { user: { id: userId } },
+      where: { user: { id: userId }, isDeleted: false },
       relations: ['batch', 'user'],
       order: { createdAt: 'DESC' },
     });
@@ -47,7 +48,7 @@ export class BatchUserService {
 
   async findOne(id: string): Promise<BatchUser> {
     const batchUser = await this.batchUserRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
       relations: ['batch', 'user'],
     });
 
@@ -82,6 +83,7 @@ export class BatchUserService {
       where: {
         batch: { id: createBatchUserDto.batchId },
         user: { id: createBatchUserDto.userId },
+        isDeleted: false,
       },
     });
 
@@ -145,10 +147,8 @@ export class BatchUserService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.batchUserRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Batch-User assignment with ID ${id} not found`);
-    }
+    const batchUser = await this.findOne(id);
+    batchUser.isDeleted = true;
+    await this.batchUserRepository.save(batchUser);
   }
 }
-

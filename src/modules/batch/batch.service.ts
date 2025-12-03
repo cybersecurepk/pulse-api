@@ -14,13 +14,14 @@ export class BatchService {
 
   async findAll(): Promise<Batch[]> {
     return await this.batchRepository.find({
+      where: { isDeleted: false },
       order: { createdAt: 'DESC' },
     });
   }
 
   async findOne(id: string): Promise<Batch> {
     const batch = await this.batchRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
     });
 
     if (!batch) {
@@ -42,10 +43,8 @@ export class BatchService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.batchRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Batch with ID ${id} not found`);
-    }
+    const batch = await this.findOne(id);
+    batch.isDeleted = true;
+    await this.batchRepository.save(batch);
   }
 }
-

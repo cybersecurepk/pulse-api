@@ -24,6 +24,7 @@ export class BatchInstructorService {
 
   async findAll(): Promise<BatchInstructor[]> {
     return await this.batchInstructorRepository.find({
+      where: { isDeleted: false },
       relations: ['batch', 'instructor'],
       order: { createdAt: 'DESC' },
     });
@@ -31,7 +32,7 @@ export class BatchInstructorService {
 
   async findByBatch(batchId: string): Promise<BatchInstructor[]> {
     return await this.batchInstructorRepository.find({
-      where: { batch: { id: batchId } },
+      where: { batch: { id: batchId }, isDeleted: false },
       relations: ['batch', 'instructor'],
       order: { createdAt: 'DESC' },
     });
@@ -39,7 +40,7 @@ export class BatchInstructorService {
 
   async findByInstructor(instructorId: string): Promise<BatchInstructor[]> {
     return await this.batchInstructorRepository.find({
-      where: { instructor: { id: instructorId } },
+      where: { instructor: { id: instructorId }, isDeleted: false },
       relations: ['batch', 'instructor'],
       order: { createdAt: 'DESC' },
     });
@@ -47,7 +48,7 @@ export class BatchInstructorService {
 
   async findOne(id: string): Promise<BatchInstructor> {
     const batchInstructor = await this.batchInstructorRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
       relations: ['batch', 'instructor'],
     });
 
@@ -85,6 +86,7 @@ export class BatchInstructorService {
       where: {
         batch: { id: createBatchInstructorDto.batchId },
         instructor: { id: createBatchInstructorDto.instructorId },
+        isDeleted: false,
       },
     });
 
@@ -148,10 +150,8 @@ export class BatchInstructorService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.batchInstructorRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Batch-Instructor assignment with ID ${id} not found`);
-    }
+    const batchInstructor = await this.findOne(id);
+    batchInstructor.isDeleted = true;
+    await this.batchInstructorRepository.save(batchInstructor);
   }
 }
-

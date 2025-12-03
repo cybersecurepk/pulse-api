@@ -20,6 +20,9 @@ export class BatchUser {
   @Column({ type: 'datetime', nullable: true })
   enrolledDate?: Date;
 
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',

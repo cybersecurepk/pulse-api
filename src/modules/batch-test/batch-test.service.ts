@@ -27,6 +27,7 @@ export class BatchTestService {
 
   async findAll(): Promise<BatchTest[]> {
     return await this.batchTestRepository.find({
+      where: { isDeleted: false },
       relations: ['batch', 'test', 'test.questions'],
       order: { createdAt: 'DESC' },
     });
@@ -34,7 +35,7 @@ export class BatchTestService {
 
   async findByBatch(batchId: string): Promise<BatchTest[]> {
     return await this.batchTestRepository.find({
-      where: { batch: { id: batchId } },
+      where: { batch: { id: batchId }, isDeleted: false },
       relations: ['batch', 'test', 'test.questions'],
       order: { createdAt: 'DESC' },
     });
@@ -42,7 +43,7 @@ export class BatchTestService {
 
   async findByTest(testId: string): Promise<BatchTest[]> {
     return await this.batchTestRepository.find({
-      where: { test: { id: testId } },
+      where: { test: { id: testId }, isDeleted: false },
       relations: ['batch', 'test', 'test.questions'],
       order: { createdAt: 'DESC' },
     });
@@ -71,6 +72,7 @@ export class BatchTestService {
           id: In(batchIds),
         },
         isActive: true,  // Only active batch-test assignments
+        isDeleted: false,
       },
       relations: ['batch', 'test', 'test.questions'],
       order: { createdAt: 'DESC' },
@@ -79,7 +81,7 @@ export class BatchTestService {
 
   async findOne(id: string): Promise<BatchTest> {
     const batchTest = await this.batchTestRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
       relations: ['batch', 'test', 'test.questions'],
     });
 
@@ -110,6 +112,7 @@ export class BatchTestService {
       where: {
         batch: { id: createBatchTestDto.batchId },
         test: { id: createBatchTestDto.testId },
+        isDeleted: false,
       },
     });
 
@@ -173,9 +176,8 @@ export class BatchTestService {
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.batchTestRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Batch-Test assignment with ID ${id} not found`);
-    }
+    const batchTest = await this.findOne(id);
+    batchTest.isDeleted = true;
+    await this.batchTestRepository.save(batchTest);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TestScreenshot } from './entities/test-screenshot.entity';
@@ -18,7 +18,7 @@ export class ScreenshotService {
 
   async findByTestId(testId: string): Promise<TestScreenshot[]> {
     return await this.screenshotRepository.find({
-      where: { test: { id: testId } },
+      where: { test: { id: testId }, isDeleted: false },
       order: {
         createdAt: 'DESC',
       },
@@ -26,6 +26,15 @@ export class ScreenshotService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.screenshotRepository.delete(id);
+    const screenshot = await this.screenshotRepository.findOne({
+      where: { id, isDeleted: false },
+    });
+    
+    if (!screenshot) {
+      throw new NotFoundException(`Screenshot with ID ${id} not found`);
+    }
+    
+    screenshot.isDeleted = true;
+    await this.screenshotRepository.save(screenshot);
   }
 }

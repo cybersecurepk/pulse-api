@@ -34,6 +34,9 @@ export class Instructor {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
@@ -50,4 +53,3 @@ export class Instructor {
   @OneToMany(() => BatchInstructor, (batchInstructor) => batchInstructor.instructor)
   batchInstructors?: BatchInstructor[];
 }
-

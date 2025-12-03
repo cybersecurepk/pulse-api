@@ -44,6 +44,9 @@ export class TestAttempt {
   @Column({ type: 'int' })
   timeSpent: number; // in seconds
 
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
+
   @CreateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
