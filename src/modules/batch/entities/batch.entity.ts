@@ -16,6 +16,7 @@ export enum BatchStatus {
   ON_HOLD = 'on_hold',
   ON_GOING = 'on_going',
   COMPLETED = 'completed',
+  CLOSED = 'closed',
 }
 
 export enum SessionType {

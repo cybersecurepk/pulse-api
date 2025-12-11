@@ -13,6 +13,7 @@ import { BatchService } from './batch.service';
 import { CreateBatchDto } from './dto/create-batch-dto';
 import { Batch } from './entities/batch.entity';
 import { UpdateBatchDto } from './dto/update-batch-dto';
+import { UpdateBatchStatusDto } from './dto/update-batch-status-dto';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Batches')
@@ -48,6 +49,15 @@ export class BatchController {
     return this.batchService.update(id, updateBatchDto);
   }
 
+  @Put('status/:id')
+  @ApiOperation({ summary: 'Update a batch status by ID' })
+  updateStatus(
+    @Param('id') id: string,
+    @Body() updateBatchStatusDto: UpdateBatchStatusDto,
+  ): Promise<Batch> {
+    return this.batchService.updateStatus(id, updateBatchStatusDto.status);
+  }
+
   @Delete('delete/:id')
   @ApiOperation({ summary: 'Delete a batch by ID' })
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -55,4 +65,3 @@ export class BatchController {
     return this.batchService.remove(id);
   }
 }
-

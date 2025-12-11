@@ -1,79 +1,82 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-
-interface OtpData {
-  otp: string;
-  expiresAt: Date;
-  lastSentAt: Date;
-}
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Otp } from './entities/otp.entity';
 
 @Injectable()
 export class OtpService {
-  private otpStorage: Map<string, OtpData> = new Map();
+  constructor(
+    @InjectRepository(Otp)
+    private readonly otpRepository: Repository<Otp>,
+  ) {}
 
   generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  saveOtp(email: string, otp: string): void {
+  async saveOtp(email: string, otp: string): Promise<void> {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes
 
-    this.otpStorage.set(email, {
-      otp,
-      expiresAt,
-      lastSentAt: now,
-    });
-
-    // Auto-cleanup after expiry
-    setTimeout(() => {
-      this.otpStorage.delete(email);
-    }, 5 * 60 * 1000);
+    // Upsert OTP for this email
+    const existing = await this.otpRepository.findOne({ where: { email } });
+    if (existing) {
+      existing.otp = otp;
+      existing.expiresAt = expiresAt;
+      existing.lastSentAt = now;
+      await this.otpRepository.save(existing);
+    } else {
+      const record = this.otpRepository.create({
+        email,
+        otp,
+        expiresAt,
+        lastSentAt: now,
+      });
+      await this.otpRepository.save(record);
+    }
   }
 
-  verifyOtp(email: string, otp: string): boolean {
-    const otpData = this.otpStorage.get(email);
-
-    if (!otpData) {
+  async verifyOtp(email: string, otp: string): Promise<boolean> {
+    const record = await this.otpRepository.findOne({ where: { email } });
+    if (!record) {
       return false;
     }
 
-    if (new Date() > otpData.expiresAt) {
-      this.otpStorage.delete(email);
+    if (new Date() > record.expiresAt) {
+      await this.otpRepository.delete({ email });
       return false;
     }
 
-    if (otpData.otp !== otp) {
+    if (record.otp !== otp) {
       return false;
     }
 
     // OTP verified successfully, remove it
-    this.otpStorage.delete(email);
+    await this.otpRepository.delete({ email });
     return true;
   }
 
-  canResendOtp(email: string): boolean {
-    const otpData = this.otpStorage.get(email);
-
-    if (!otpData) {
+  async canResendOtp(email: string): Promise<boolean> {
+    const record = await this.otpRepository.findOne({ where: { email } });
+    if (!record) {
       return true; // No OTP sent yet
     }
 
     const now = new Date();
-    const timeSinceLastSent = now.getTime() - otpData.lastSentAt.getTime();
+    const timeSinceLastSent = now.getTime() - record.lastSentAt.getTime();
     const oneMinuteInMs = 60 * 1000;
 
     return timeSinceLastSent >= oneMinuteInMs;
   }
 
-  getTimeUntilResend(email: string): number {
-    const otpData = this.otpStorage.get(email);
-
-    if (!otpData) {
+  async getTimeUntilResend(email: string): Promise<number> {
+    const record = await this.otpRepository.findOne({ where: { email } });
+    if (!record) {
       return 0;
     }
 
     const now = new Date();
-    const timeSinceLastSent = now.getTime() - otpData.lastSentAt.getTime();
+    const timeSinceLastSent = now.getTime() - record.lastSentAt.getTime();
     const oneMinuteInMs = 60 * 1000;
 
     const remainingTime = oneMinuteInMs - timeSinceLastSent;

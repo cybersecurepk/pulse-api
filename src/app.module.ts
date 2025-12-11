@@ -19,6 +19,7 @@ import { BatchInstructorModule } from './modules/batch-instructor/batch-instruct
 import { AuthModule } from './modules/auth/auth.module';
 import { TokenModule } from './modules/token/token.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     BatchInstructorModule,
     AuthModule,
     TokenModule,
+    UploadModule,
   ],
 })
 export class AppModule {}
