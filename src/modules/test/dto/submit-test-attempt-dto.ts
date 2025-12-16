@@ -29,4 +29,16 @@ export class SubmitTestAttemptDto {
   @IsOptional()
   @IsNumber()
   timeSpent?: number;
+
+  @ApiProperty({
+    description: 'Proctoring images captured during the test',
+    example: {
+      'question-id-1': 'uploads/test-123-question-1.jpg',
+      'question-id-2': 'uploads/test-123-question-2.jpg',
+    },
+    required: false,
+  })
+  @IsOptional()
+  @IsObject()
+  proctoringImages?: Record<string, string>; // questionId -> imageUrl
 }

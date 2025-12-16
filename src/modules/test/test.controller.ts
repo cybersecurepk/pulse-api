@@ -37,6 +37,13 @@ export class TestController {
     return this.testService.getAllTestAttempts();
   }
 
+  @Get('attempts/:id')
+  @ApiOperation({ summary: 'Get a single test attempt by ID with full details' })
+  @ApiResponse({ status: 200, description: 'Test attempt data with full details' })
+  async getTestAttemptById(@Param('id') attemptId: string) {
+    return this.testService.getTestAttemptById(attemptId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a test by ID' })
   findOne(@Param('id') id: string): Promise<Test> {
@@ -102,6 +109,7 @@ export class TestController {
       submitTestAttemptDto.userId,
       submitTestAttemptDto.answers,
       submitTestAttemptDto.timeSpent,
+      submitTestAttemptDto.proctoringImages,
     );
   }
 

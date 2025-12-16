@@ -15,6 +15,7 @@ import { CreateScreenshotDto } from './dto/create-screenshot-dto';
 import { ScreenshotService } from './screenshot.service';
 import { TestAttemptResultDto } from './dto/test-attempt-result-dto';
 import { BatchTest } from '../batch-test/entities/batch-test.entity';
+import { BatchStatus } from '../batch/entities/batch.entity';
 
 @Injectable()
 export class TestService {
@@ -168,6 +169,7 @@ export class TestService {
     userId: string,
     answers: Record<string, string>,
     timeSpent?: number,
+    proctoringImages?: Record<string, string>,
   ): Promise<TestAttemptResultDto> {
     // Fetch test with questions and options using existing relationships
     const test = await this.testRepository.findOne({
@@ -244,6 +246,33 @@ export class TestService {
 
     await this.testAttemptRepository.save(attempt);
 
+    // Save proctoring images to database if provided
+    if (proctoringImages && Object.keys(proctoringImages).length > 0) {
+      const screenshotPromises = Object.entries(proctoringImages).map(([questionId, imageUrl]) => {
+        // Extract filename from URL or path
+        const filename = imageUrl.split('/').pop() || `test-${testId}-${questionId}.jpg`;
+        
+        // Validate that the questionId exists in the test
+        // Validate that the questionId exists in the test
+        const questionExists = test.questions.some(q => q.id === questionId);
+        if (!questionExists) {
+          console.warn(`Invalid questionId ${questionId} for test ${testId}, skipping screenshot`);
+          return Promise.resolve(null);
+        }
+        
+        const screenshot = this.screenshotRepository.create({
+          imageUrl,
+          description: filename,
+          questionId,
+          test,
+        });
+        
+        return this.screenshotRepository.save(screenshot);
+      });
+      
+      await Promise.all(screenshotPromises);
+    }
+
     return {
       totalQuestions,
       correctAnswers,
@@ -257,6 +286,7 @@ export class TestService {
   // Get unattempted tests for a user
   async getUnattemptedTestsForUser(userId: string): Promise<Test[]> {
     // First, get all tests assigned to the user through batch assignments
+    // Only include tests from batches with status 'completed'
     const batchTests = await this.batchTestRepository.find({
       where: {
         batch: {
@@ -264,10 +294,11 @@ export class TestService {
             user: { id: userId },
             isActive: true,
           },
+          status: BatchStatus.COMPLETED, // Only include tests from completed batches
         },
         isActive: true,
       },
-      relations: ['test', 'test.questions', 'test.questions.options'],
+      relations: ['test', 'test.questions', 'test.questions.options', 'batch'],
     });
 
     // Get the test IDs from batch assignments
@@ -370,7 +401,53 @@ export class TestService {
       },
     }));
   }
+
+  // Get a single test attempt by ID with full details
+  async getTestAttemptById(attemptId: string) {
+    const attempt = await this.testAttemptRepository.findOne({
+      where: { id: attemptId, isDeleted: false },
+      relations: ['test', 'test.questions', 'test.questions.options', 'user'],
+    });
+
+    if (!attempt) {
+      throw new NotFoundException(`Test attempt with ID ${attemptId} not found`);
+    }
+
+    // Remove isCorrect flag from options to hide correct answers from frontend
+    if (attempt.test) {
+      return {
+        ...attempt,
+        test: {
+          ...attempt.test,
+          questions: attempt.test.questions.map(question => ({
+            ...question,
+            options: question.options.map(option => {
+              const { isCorrect, ...optionWithoutAnswer } = option;
+              return optionWithoutAnswer;
+            }),
+          })),
+        },
+        user: {
+          id: attempt.user.id,
+          name: attempt.user.name || attempt.user.email,
+          email: attempt.user.email,
+        },
+      };
+    }
+
+    return attempt;
+  }
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
