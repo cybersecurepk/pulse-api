@@ -12,7 +12,7 @@ export class MailService {
   async sendOtpEmail(email: string, userName: string, otp: string): Promise<void> {
     await this.sesService.sendTemplatedEmail(
       email,
-      'otp-email',
+      'otp-verification-template',
       {
         headerLogo: process.env.EMAIL_HEADER_LOGO || 'https://via.placeholder.com/140x40.png',
         footerLogo: process.env.EMAIL_FOOTER_LOGO || 'https://via.placeholder.com/90x30.png',

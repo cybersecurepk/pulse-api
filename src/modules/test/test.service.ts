@@ -222,14 +222,6 @@ export class TestService {
       totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
     const passed = score >= test.passingCriteria;
 
-    // console.log('\n=== FINAL CALCULATION ===');
-    // console.log('Correct Answers:', correctAnswers);
-    // console.log('Wrong Answers:', wrongAnswers);
-    // console.log('Total Questions:', totalQuestions);
-    // console.log('Score:', score);
-    // console.log('Passed:', passed);
-    // console.log('========================\n');
-
     // Save attempt to database
     const attempt = this.testAttemptRepository.create({
       testId,
@@ -283,10 +275,8 @@ export class TestService {
     };
   }
 
-  // Get unattempted tests for a user
+  // Get unattempted tests for a user from completed batches only (for active tests view)
   async getUnattemptedTestsForUser(userId: string): Promise<Test[]> {
-    // First, get all tests assigned to the user through batch assignments
-    // Only include tests from batches with status 'completed'
     const batchTests = await this.batchTestRepository.find({
       where: {
         batch: {
@@ -295,6 +285,73 @@ export class TestService {
             isActive: true,
           },
           status: BatchStatus.COMPLETED, // Only include tests from completed batches
+        },
+        isActive: true,
+      },
+      relations: ['test', 'test.questions', 'test.questions.options', 'batch'],
+    });
+
+    // Get the test IDs from batch assignments
+    const testIds = batchTests.map(bt => bt.test.id);
+
+    if (testIds.length === 0) {
+      return [];
+    }
+
+    // Get the actual tests with their details
+    const tests = await this.testRepository.find({
+      where: {
+        id: In(testIds),
+        isActive: true,
+        isDeleted: false,
+      },
+      relations: ['questions', 'questions.options'],
+      order: {
+        questions: {
+          sortOrder: 'ASC',
+        },
+      },
+    });
+
+    // Get test attempts for this user
+    const attempts = await this.testAttemptRepository.find({
+      where: {
+        userId,
+        testId: In(testIds),
+      },
+    });
+
+    // Get test IDs that have been attempted
+    const attemptedTestIds = attempts.map(attempt => attempt.testId);
+
+    // Filter out tests that have been attempted
+    const unattemptedTests = tests.filter(test => !attemptedTestIds.includes(test.id));
+
+    // Remove isCorrect flag from options to hide correct answers from frontend
+    return unattemptedTests.map(test => ({
+      ...test,
+      questions: test.questions.map(question => ({
+        ...question,
+        options: question.options.map(option => {
+          const { isCorrect, ...optionWithoutAnswer } = option;
+          return optionWithoutAnswer;
+        }),
+      })),
+    })) as Test[];
+  }
+
+  // Get unattempted tests for a user from closed batches only
+  async getUnattemptedTestsFromClosedBatchesForUser(userId: string): Promise<Test[]> {
+    // First, get all tests assigned to the user through batch assignments
+    // Only include tests from closed batches
+    const batchTests = await this.batchTestRepository.find({
+      where: {
+        batch: {
+          batchUsers: {
+            user: { id: userId },
+            isActive: true,
+          },
+          status: BatchStatus.CLOSED, // Only include tests from closed batches
         },
         isActive: true,
       },

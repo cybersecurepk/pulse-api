@@ -119,6 +119,12 @@ export class TestController {
     return this.testService.getUnattemptedTestsForUser(userId);
   }
 
+  @Get('user/:userId/unattempted-from-closed-batches')
+  @ApiOperation({ summary: 'Get unattempted tests for a user from closed batches' })
+  async getUnattemptedTestsFromClosedBatchesForUser(@Param('userId') userId: string) {
+    return this.testService.getUnattemptedTestsFromClosedBatchesForUser(userId);
+  }
+
   @Get('user/:userId/attempts')
   @ApiOperation({ summary: 'Get test attempts for a user' })
   async getUserTestAttempts(@Param('userId') userId: string) {

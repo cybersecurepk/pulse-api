@@ -13,8 +13,11 @@ import {
   ExceptionFilter,
   ArgumentsHost,
   UseFilters,
+  Param,
+  UploadedFile,
+  UseInterceptors,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiConsumes } from "@nestjs/swagger";
 import { AuthService } from "./auth.service";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { GoogleAuthGuard } from "./guards/google-auth/google-auth.guard";
@@ -23,6 +26,7 @@ import type { Request, Response } from "express";
 import { LoginDto } from "./dto/login.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 import { ResendOtpDto } from "./dto/resend-otp.dto";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 // DTO for Google authentication from frontend
 class GoogleAuthDto {
@@ -120,6 +124,11 @@ export class AuthController {
       return res.redirect(`http://localhost:3021/auth/sign-in?error=${redirectError}`);
     }
   }
+
+
+
+
+
 
   // New endpoint for handling Google authentication from frontend NextAuth
   @Public()
