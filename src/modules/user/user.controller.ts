@@ -32,6 +32,7 @@ export class UserController {
     enum: ApplicationStatus,
     description: 'Filter by application status',
   })
+
   async findAll(@Query('status') status?: string): Promise<User[]> {
     if (status && Object.values(ApplicationStatus).includes(status as ApplicationStatus)) {
       return this.userService.findByApplicationStatus(status);
